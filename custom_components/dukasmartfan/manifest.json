@@ -9,7 +9,7 @@
   "issue_tracker": "https://github.com/niclaskn/ha-dukasmartfan/issues",
   "loggers": ["duka_smartfan_sdk"],
   "requirements": [
-    "duka_smartfan_sdk @ git+https://github.com/niclaskn/duka_smartfan_sdk.git@f11735b3071d3b9639a30814afb480c4989b82c2"
+    "git+https://github.com/niclaskn/duka_smartfan_sdk.git@f11735b3071d3b9639a30814afb480c4989b82c2#egg=duka_smartfan_sdk"
   ],
   "version": "2026.11.0"
 }
