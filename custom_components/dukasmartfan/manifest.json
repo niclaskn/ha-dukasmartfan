@@ -1,14 +1,15 @@
 {
-  "codeowners": ["@syre"],
-  "dependencies": [],
   "domain": "dukasmartfan",
-  "version": "2025.05.0",
   "name": "Duka Smartfan",
+  "codeowners": ["@niclaskn"],
   "config_flow": true,
-  "documentation": "https://github.com/syre/ha-dukasmartfan",
+  "dependencies": [],
+  "documentation": "https://github.com/niclaskn/ha-dukasmartfan",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/syre/ha-dukasmartfan",
+  "issue_tracker": "https://github.com/niclaskn/ha-dukasmartfan/issues",
+  "loggers": ["duka_smartfan_sdk"],
   "requirements": [
-    "duka_smartfan_sdk @ git+https://github.com/syre/duka_smartfan_sdk.git@master#egg=duka_smartfan_sdk"
-  ]
+    "duka_smartfan_sdk @ git+https://github.com/niclaskn/duka_smartfan_sdk.git@f11735b3071d3b9639a30814afb480c4989b82c2"
+  ],
+  "version": "2026.11.0"
 }
