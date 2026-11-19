@@ -44,11 +44,6 @@ class DukaData:
             self._client = DukaClient()
         return self._client
 
-    @property
-    def has_client(self) -> bool:
-        """Return True if a client has been created."""
-        return self._client is not None
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: DukaConfigEntry) -> bool:
     """Set up Duka Smartfan from a config entry."""

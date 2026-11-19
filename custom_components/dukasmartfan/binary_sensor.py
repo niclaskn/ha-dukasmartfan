@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DukaConfigEntry
 from .dukaentity import DukaEntity
@@ -16,7 +16,7 @@ from .dukaentity import DukaEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DukaConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Duka Smartfan binary sensors."""
     async_add_entities([DukaSmartfanMotorRunning(entry)])

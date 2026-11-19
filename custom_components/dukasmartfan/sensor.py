@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, REVOLUTIONS_PER_MINUTE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DukaConfigEntry
 from .dukaentity import DukaEntity
@@ -23,7 +23,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DukaConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Duka Smartfan sensors."""
     async_add_entities(
