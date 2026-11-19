@@ -66,3 +66,10 @@ async def test_unload_keeps_client_with_other_devices(hass, client, setup_entry)
     assert await hass.config_entries.async_unload(setup_entry.entry_id)
     client.close.assert_not_called()
     assert DOMAIN in hass.data
+
+
+async def test_client_listens_on_free_port(hass, setup_entry):
+    """Port 4000 stays free for the Duka One integration (the smart fan replies to the sender's port)."""
+    from custom_components.dukasmartfan import DukaClient
+
+    DukaClient.assert_called_once_with(listen_port=0)

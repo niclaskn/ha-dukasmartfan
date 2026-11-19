@@ -41,7 +41,10 @@ class DukaData:
     def client(self) -> DukaClient:
         """Get the duka smartfan client, creating it on first use."""
         if self._client is None:
-            self._client = DukaClient()
+            # The smart fan replies to the sender's port, so listen on a free
+            # port instead of 4000: that leaves 4000 to the Duka One
+            # integration and keeps the two from taking each other's replies.
+            self._client = DukaClient(listen_port=0)
         return self._client
 
 
