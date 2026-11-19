@@ -1,102 +1,67 @@
-"""
-Platform for Duka Smartfan fan.
+"""Fan platform for Duka Smartfan."""
 
-see http://www.dingus.dk for more information
-"""
+from __future__ import annotations
 
 import logging
+from collections.abc import Callable
+from typing import Any
 
-from duka_smartfan_sdk.device import Device
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PASSWORD,
-)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import DukaConfigEntry, DukaData
+from .const import DOMAIN
 from .dukaentity import DukaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    entry: DukaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Duka One based on a config entry."""
-
-    name = entry.data[CONF_NAME]
-    device_id = entry.data[CONF_DEVICE_ID]
-    password = entry.data[CONF_PASSWORD]
-    ip_address = entry.data[CONF_IP_ADDRESS]
-    if ip_address is None or len(ip_address) == 0:
-        ip_address = "<broadcast>"
-
+    """Set up the Duka Smartfan fan."""
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service("toggle_boost", {}, "toggle_boost")
-    dukasmartfanfan = DukaSmartFanFan(hass, name, device_id, password, ip_address)
-    await dukasmartfanfan.wait_for_device_to_be_ready()
-    async_add_entities([dukasmartfanfan], True)
+    platform.async_register_entity_service("toggle_boost", {}, "async_toggle_boost")
+    async_add_entities([DukaSmartFanFan(hass, entry)])
 
 
-class DukaSmartFanFan(FanEntity, DukaEntity):
-    """A Duka Smartfan fan component."""
+class DukaSmartFanFan(DukaEntity, FanEntity):
+    """A Duka Smartfan fan."""
 
+    _attr_name = None
     _attr_supported_features = FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
-    _attr_should_poll = False
-    _attr_assumed_state = False
 
-    def __init__(self, hass: HomeAssistant, name, device_id, password, ip_address):
-        """Initialize the Duka Smartfan fan."""
-        super(DukaSmartFanFan, self).__init__(hass, device_id)
-        self._attr_name = name
-        self._is_active = None
-        hass.async_add_executor_job(self.initialize_device, password, ip_address)
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self.device = self.client.remove_device(self.device)
-        return
-
-    def on_change(self, device: Device):
-        """Callback when the duka smartfan change state"""
-        has_changed = False
-        if self._is_active != device.is_active:
-            self._is_active = device.is_active
-            has_changed = True
-        if self.hass is not None and has_changed:
-            self.schedule_update_ha_state()
+    def __init__(self, hass: HomeAssistant, entry: DukaConfigEntry) -> None:
+        super().__init__(entry)
+        self._data: DukaData = hass.data[DOMAIN]
+        self._attr_unique_id = self._device_id
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._device_id
+    def is_on(self) -> bool | None:
+        """Return the fan's own on/off setting (not whether the motor spins)."""
+        return self.device.is_on
 
-    @property
-    def is_on(self):
-        """
-        Use is_active as proxy for is_on.
-        """
-        return self._is_active
+    async def _send(self, command: Callable[..., None]) -> None:
+        try:
+            await self.hass.async_add_executor_job(command, self.device)
+        except (OSError, TimeoutError) as err:
+            raise HomeAssistantError(
+                f"Could not send command to Duka Smartfan: {err}"
+            ) from err
 
-    def turn_on(
-        self,
-        **kwargs,
-    ) -> None:
-        """Turn on the entity."""
-        self.client.turn_on(self.device)
+    async def async_turn_on(self, *args: Any, **kwargs: Any) -> None:
+        """Turn the fan on."""
+        await self._send(self._data.client.turn_on)
 
-    def turn_off(self, **kwargs) -> None:
-        """Turn off the entity."""
-        self.client.turn_off(self.device)
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the fan off."""
+        await self._send(self._data.client.turn_off)
 
-    def toggle_boost(self, **kwargs) -> None:
-        self.client.toggle_boost(self.device)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        return self.dukasmartfan_device_info()
+    async def async_toggle_boost(self) -> None:
+        """Toggle boost."""
+        await self._send(self._data.client.toggle_boost)
