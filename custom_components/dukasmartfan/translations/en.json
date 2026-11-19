@@ -1,21 +1,48 @@
 {
-    "config": {
-        "error": {
-            "cannot_connect": "Cannot not connect to the Duka Smartfan device",
-            "unknown": "Unknown error"
-        },
-        "step": {
-            "user": {
-                "description": "You can find the Device Id in the Duka Smartfan App.",
-                "data": {
-                    "name": "Name",
-                    "device_id": "Device Id",
-                    "password": "Password",
-                    "ip_address": "IP Address",
-                    "static_ip": "Static IP"
-                }
-            }
+  "title": "Duka Smartfan",
+  "config": {
+    "step": {
+      "user": {
+        "description": "You can find the Device Id in the Duka Smartfan App.",
+        "data": {
+          "name": "Name",
+          "device_id": "Device Id",
+          "password": "Password",
+          "ip_address": "IP Address",
+          "static_ip": "Static IP"
         }
+      }
     },
-    "title": "Duka Smartfan"
+    "error": {
+      "cannot_connect": "Cannot connect to the Duka Smartfan device",
+      "unknown": "Unknown error"
+    },
+    "abort": {
+      "already_configured": "This device is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "humidity": {
+        "name": "Humidity"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      }
+    },
+    "binary_sensor": {
+      "motor_running": {
+        "name": "Motor running"
+      }
+    }
+  },
+  "services": {
+    "toggle_boost": {
+      "name": "Toggle boost",
+      "description": "Toggles the boost mode of the Duka Smartfan."
+    }
+  }
 }

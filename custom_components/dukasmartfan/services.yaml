@@ -1,6 +1,5 @@
 toggle_boost:
-  description: Toggles duka smartfan boost.
-  fields:
-    entity_id:
-      description: Name of the entity to set
-      example: "fan.dukasmartfan"
+  target:
+    entity:
+      integration: dukasmartfan
+      domain: fan

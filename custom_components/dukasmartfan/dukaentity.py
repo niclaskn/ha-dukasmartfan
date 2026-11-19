@@ -1,61 +1,49 @@
-""" """
+"""Base class for Duka Smartfan entities."""
 
-import asyncio
-import logging
-import time
+from __future__ import annotations
 
 from duka_smartfan_sdk.device import Device
-from duka_smartfan_sdk.dukaclient import DukaClient
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
+from . import DukaConfigEntry, signal_update
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
+class DukaEntity(Entity):
+    """Base of a duka entity with a reference to a device."""
 
-class DukaEntity:
-    """Implement the base of a duka entity with a reference to a device"""
+    _attr_has_entity_name = True
+    _attr_should_poll = False
 
-    def __init__(self, hass: HomeAssistant, device_id):
-        self._device_id = device_id
-        self.device: Device = None
-        from . import DukaData
-
-        component: DukaData = hass.data[DOMAIN]
-        self.client: DukaClient = component.client
-
-    def initialize_device(self, password: str, ip_address: str) -> None:
-        """Initialize the duka smartfan device"""
-        self.device = self.client.add_device(
-            self._device_id,
-            password,
-            ip_address,
-            self.on_change,
+    def __init__(self, entry: DukaConfigEntry) -> None:
+        self.device: Device = entry.runtime_data
+        self._device_id: str = entry.data[CONF_DEVICE_ID]
+        firmware = " ".join(
+            str(part)
+            for part in (self.device.firmware_version, self.device.firmware_date)
+            if part
         )
-
-    async def wait_for_device_to_be_ready(self) -> bool:
-        """Wait for the device to reponse to the initial get firmware version command."""
-        timeout = time.time() + 10
-        while self.device is None or self.device.firmware_version is None:
-            if time.time() > timeout:
-                _LOGGER.warning("Timeout getting dukasmartfan firmware version")
-                return False
-            await asyncio.sleep(0.1)
-        return True
-
-    def on_change(self, device: Device):
-        """Callback whe duka smartfan has changes - must be implemented in derived class"""
-        raise NotImplementedError()
-
-    def dukasmartfan_device_info(self) -> DeviceInfo | None:
-        """Return device information."""
-        if self.device is None:
-            return None
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name="DukaSmartFan",
+            name=entry.data[CONF_NAME],
             manufacturer="Duka Ventilation",
             model=f"Type {self.device.unit_type}",
-            sw_version=f"{self.device.firmware_version} {self.device.firmware_date}",
+            sw_version=firmware or None,
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to pushed updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, signal_update(self._device_id), self._handle_update
+            )
+        )
+
+    @callback
+    def _handle_update(self) -> None:
+        self.async_write_ha_state()

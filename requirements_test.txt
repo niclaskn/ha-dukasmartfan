@@ -1,0 +1,3 @@
+pytest-homeassistant-custom-component
+pytest-cov
+duka_smartfan_sdk @ git+https://github.com/niclaskn/duka_smartfan_sdk.git@f11735b3071d3b9639a30814afb480c4989b82c2
